@@ -36,8 +36,9 @@
 
 <?php $count = 0; ?>
 <?php $i = 1 ?>
-{!! Form::open(array('url' => $subject->getCreateCommentEndpoint())) !!}
+{!! Form::open(array('url' => $subject->getCreateCommentEndpoint(), 'files' => true, 'enctype'=>'multipart/form-data')) !!}
 <div class="form-group">
+    {!! Form::file('image', null, ['class' => 'form-control', 'id' => 'comment-field']) !!}
     {!! Form::textarea('description', null, ['class' => 'form-control', 'id' => 'comment-field']) !!}
     {!! Form::submit( __('Add Comment') , ['class' => 'btn btn-brand btn-md btn-upper movedown']) !!}
 </div>
@@ -46,6 +47,7 @@
 <div class="tablet tablet__shadow" style="font-size: 14px!important;">
     <div class="tablet__body tablet__tigthen" style="font-size: 14px!important;">
         <p style="font-size: 12px!important; text-decoration:none!important;"> {!! $comment->description !!} </p>
+        <embed src='{!! $comment->image !!}' width="100%" height="100%">
     </div>
     <div class="tablet__footer tablet__tigthen" style="font-size: 12px!important;">
         <p class="smalltext" style="font-size: 14px!important;">{{ __('Comment by') }}: {{$comment->user->name}}
@@ -93,7 +95,7 @@
                 ['color', ['color']],
                 ['para', ['ol', 'ul', 'paragraph']],
                 ['table', ['table']],
-                ['insert', ['link', 'picture']],
+                ['insert', ['link']],
                 ['view', ['fullscreen']]
             ],
             height: 300,

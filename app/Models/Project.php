@@ -47,7 +47,7 @@ class Project extends model implements Commentable
 
     public function getRouteKeyName()
     {
-        return 'external_id';
+        return 'id';
     }
 
     public function displayValue()
