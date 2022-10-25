@@ -32,7 +32,11 @@ class RegisterController extends Controller
         $data->flag = $request->flag;
 
         $data->password = bcrypt($request->password);
-        $data->save();
+        $data->save();  
+        Pegawa::create([
+            'user_id' => $data->id,
+            'role_id' => 4,
+        ]);
         return redirect('login')->with('alert-success', 'You have been enrolled');
     }
 }

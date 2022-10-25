@@ -12,7 +12,7 @@ class Product extends Model
     
     public function getRouteKeyName()
     {
-        return 'external_id';
+        return 'id';
     }
 
     public function getMoneyPriceAttribute()

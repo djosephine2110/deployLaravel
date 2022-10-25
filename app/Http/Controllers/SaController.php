@@ -6,46 +6,95 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+
 class SaController extends Controller
 {
     public function index()
     {
         //Users
-        $getDataProject = DB::table('projects')->join('users','projects.user_assigned_id','=','users.id')->where('projects.deleted_at', '=', NULL)->count();
-        $getDataTask = DB::table('tasks')->join('users','tasks.user_assigned_id','=','users.id')->join('projects','tasks.project_id','=','projects.id')->where('projects.deleted_at','=',NULL)->where('tasks.deleted_at','=',NULL)->count();
-        $getIncTask = DB::table('tasks')->join('users','tasks.user_assigned_id','=','users.id')->join('projects','tasks.project_id','=','projects.id')->where('projects.deleted_at','=',NULL)->where('tasks.deleted_at', '=', NULL)->where('tasks.status_id','!=',7)->count();
-        $getCompTask = DB::table('tasks')->join('users','tasks.user_assigned_id','=','users.id')->join('projects','tasks.project_id','=','projects.id')->where('projects.deleted_at','=',NULL)->where('tasks.deleted_at', '=', NULL)->where('tasks.status_id','=',7)->count();
-        $getOv = DB::table('tasks')->join('users','tasks.user_assigned_id','=','users.id')->join('projects','tasks.project_id','=','projects.id')->where('projects.deleted_at','=',NULL)->where('tasks.deleted_at', '=', NULL)->where('tasks.deadline', '<', Carbon::today())->where('tasks.status_id', '!=', 7)->count();
-        //EOUSERS
+        $getDataProject = DB::table('projects')
+            ->join('users', 'projects.user_assigned_id', '=', 'users.id')
+            ->where('projects.deleted_at', '=', null)
+            ->count();
+        $getDataTask = DB::table('tasks')
+            ->join('users', 'tasks.user_assigned_id', '=', 'users.id')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->where('projects.deleted_at', '=', null)
+            ->where('tasks.deleted_at', '=', null)
+            ->count();
+            dd($getDataTask);
+        $getIncTask = DB::table('tasks')
+            ->join('users', 'tasks.user_assigned_id', '=', 'users.id')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->where('projects.deleted_at', '=', null)
+            ->where('tasks.deleted_at', '=', null)
+            ->where('tasks.status_id', '!=', 7)
+            ->where('tasks.status_id', '!=', 1)
+            ->where('tasks.status_id', '!=', 3)
+            ->count();
+        $getCompTask = DB::table('tasks')
+            ->join('users', 'tasks.user_assigned_id', '=', 'users.id')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->where('projects.deleted_at', '=', null)
+            ->where('tasks.deleted_at', '=', null)
+            ->where('tasks.status_id', '=', 7)
+            ->count();
+        $getOv = DB::table('tasks')
+            ->join('users', 'tasks.user_assigned_id', '=', 'users.id')
+            ->join('projects', 'tasks.project_id', '=', 'projects.id')
+            ->where('projects.deleted_at', '=', null)
+            ->where('tasks.deleted_at', '=', null)->where('tasks.deadline', '<', Carbon::today())->where('tasks.status_id', '!=', 7)->count();
         $getUserList = DB::table('users')->count();
-        //EOMAN
         $getUser = DB::table('users')->get();
-        $most = DB::table('activities')
-        ->join('users', 'activities.causer_id', '=', 'users.id')
-        ->select('users.name', 'users.image', 'users.email', 'activities.created_at')->distinct()
-        ->paginate(5);
-        $year = ['2021-01','2021-02','2021-03','2021-04','2021-05','2021-06', '2021-07','2021-08','2021-09','2021-10','2021-11', '2021-12', '2022-01'] ;
+        $most = DB::table('tasks')
+            ->join('users', 'tasks.user_assigned_id', '=', 'users.id')
+            ->join('divs', 'users.flag', 'divs.id')
+            ->when(Auth::user()->user_flag != "2", function ($query) {
+                return $query->where('divs.id', '=', Auth::user()->flag);
+            })
+            ->select('users.name', 'users.image', 'users.email', 'tasks.created_at')
+            ->groupBy('users.id')
+            ->orderByDesc('tasks.status_id')
+            ->where('tasks.status_id', '7')
+            ->paginate(5);
 
-
+        $period = now()->subMonths(12)->monthsUntil(now());
+        $data = [];
+        foreach ($period as $date) {
+            $data[] = [
+                'month' => $date->month,
+                'year' => $date->year,
+            ];
+        }
+        foreach ($data as $key => $value) {
+            if (strlen($value['month']) < 2) {
+                $year[] = $value['year'] . '-0' . $value['month'];
+            } else {
+                $year[] = $value['year'] . '-' . $value['month'];
+            }
+        }
         $user = [];
         foreach ($year as $key => $value) {
-            $user[] = DB::table('tasks')->join('users','tasks.user_assigned_id','=','users.id')->join('projects','tasks.project_id','=','projects.id')->where('projects.deleted_at','=',NULL)->where('tasks.deleted_at', '=', NULL) ->where(DB::raw("DATE_FORMAT(tasks.created_at, '%Y-%m')"),$value)->count();
+            $user[] = DB::table('tasks')
+                ->join('users', 'tasks.user_assigned_id', '=', 'users.id')
+                ->join('projects', 'tasks.project_id', '=', 'projects.id')
+                ->where('projects.deleted_at', '=', NULL)
+                ->where('tasks.deleted_at', '=', NULL)
+                ->where(DB::raw("DATE_FORMAT(tasks.created_at, '%Y-%m')"), $value)
+                ->count();
         }
-
-        $record = DB::table('tasks')->select(DB::raw("COUNT(*) as count"), DB::raw("flag as day_name"), 'divs.division')->join('divs', 'tasks.flag', '=', 'divs.id')
-    ->groupBy('day_name')
-    ->get();
-  
-     $data = [];
- 
-     foreach($record as $row) {
-        $data['division'][] = $row->division;
-        $data['data'][] = (int) $row->count;
-      }
- 
-    $data['chart_data'] = json_encode($data);
-    
-        return view('sa', $data,compact('getDataProject','getDataTask','getIncTask', 'getCompTask', 'getOv','getUserList', 'getUser', 'most'))->with('year',json_encode($year,JSON_NUMERIC_CHECK))->with('user',json_encode($user,JSON_NUMERIC_CHECK));
+        $record = DB::table('tasks')
+            ->select(DB::raw("COUNT(*) as count"), DB::raw("flag as day_name"), 'divs.division')
+            ->join('divs', 'tasks.flag', '=', 'divs.id')
+            ->groupBy('day_name')
+            ->get();
+        $data = [];
+        foreach ($record as $row) {
+            $data['division'][] = $row->division;
+            $data['data'][] = (int) $row->count;
+        }
+        $data['chart_data'] = json_encode($data);
+        return view('sa', $data, compact('getDataProject', 'getDataTask', 'getIncTask', 'getCompTask', 'getOv', 'getUserList', 'getUser', 'most'))->with('year', json_encode($year, JSON_NUMERIC_CHECK))->with('user', json_encode($user, JSON_NUMERIC_CHECK));
     }
 
     /**

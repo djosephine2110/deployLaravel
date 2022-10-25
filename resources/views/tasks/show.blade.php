@@ -37,7 +37,7 @@
             });
         </script>
     @endpush
-    <a href="/projects/{{$tasks->project->external_id}}" class="btn btn-md btn-brand" style="margin:1em; font-size:15px;">Back</a>
+    <a href="/projects/{{$tasks->project->id.'-'.str_slug($tasks->title, "-")}}" class="btn btn-md btn-brand" style="margin:1em; font-size:15px;">Back</a>
     <div class="row">
         @include('partials.clientheader')
         @include('partials.userheader', ['changeUser' => false])
@@ -198,7 +198,7 @@
 
                     <div class="modal-body">
 
-                        <form action="{{route('task.update.deadline', $tasks->external_id)}}" method="POST">
+                        <form action="{{route('task.update.deadline', $tasks->id)}}" method="POST">
                             @method('PATCH')
                             @csrf
                             <div class="form-group">

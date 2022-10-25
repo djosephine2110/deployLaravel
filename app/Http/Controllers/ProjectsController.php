@@ -19,6 +19,7 @@ use App\Div;
 use App\Http\Requests\Project\StoreProjectRequest;
 use Ramsey\Uuid\Uuid;
 use App\Repositories\FilesystemIntegration\FilesystemIntegration;
+use Elasticsearch\Endpoints\Security\GetUser;
 
 class ProjectsController extends Controller
 {
@@ -89,7 +90,7 @@ class ProjectsController extends Controller
         ->withStatuses(Status::typeOfProject()->get());
     }
     
-    public function destroy(Project $project, Request $request)
+    public function destroy($external_id)
     {
         /**$deleteTasks = $request->delete_tasks ? true : false;
         if ($project->tasks && $deleteTasks) {
@@ -99,7 +100,8 @@ class ProjectsController extends Controller
         }
 
         $project->delete();**/
-        $project->delete();
+        // $project->delete();
+        DB::table('projects')->where('external_id', $external_id)->delete();
         
         Session()->flash('flash_message', __('Project deleted'));
         return redirect()->back();
@@ -152,7 +154,7 @@ class ProjectsController extends Controller
         }
 
         //Hack to make dropzone js work, as it only called with AJAX and not form submit
-        return response()->json(['project_external_id' => $project->external_id]);
+        return response()->json(['project_external_id' => $project->id.'-'.str_slug($project->title, '-')]);
     }
 
     private function upload($image, $project)
@@ -202,7 +204,7 @@ class ProjectsController extends Controller
         $client =  Client::whereExternalId($client_external_id);
         $getDiv = Div::all();
         return view('projects.create', compact('getDiv', 'users'))
-            ->withUsers(User::with(['department'])->get()->pluck('nameAndDepartmentEagerLoading', 'id'))
+            ->withUsers(User::with(['department'])->orderBy('name')->get()->pluck('nameAndDepartmentEagerLoading', 'id'))
             ->withClients(Client::pluck('company_name', 'external_id'))
             ->withClient($client ?: null)
             ->withStatuses(Status::typeOfProject()->pluck('title', 'id'))
@@ -228,9 +230,7 @@ class ProjectsController extends Controller
             })->count();
             $completionPercentage = round($completedTasks / $tasks * 100);
         }
-
-
-
+        
         $collaborators = collect();
 
         $collaborators->push($project->assignee);
@@ -248,20 +248,19 @@ class ProjectsController extends Controller
             ->withUsers(User::with(['department'])->get()->pluck('nameAndDepartmentEagerLoading', 'id'))
             ->withFiles($project->documents)
             ->with('filesystem_integration', Integration::whereApiType('file')->first());
-        ;
     }
 
-    public function updateStatus($external_id, Request $request)
+    public function updateStatus($id, Request $request)
     {
         if (!auth()->user()->can('task-update-status')) {
             session()->flash('flash_message_warning', __('You do not have permission to change task status'));
-            return redirect()->route('tasks.show', $external_id);
+            return redirect()->route('tasks.show', $id);
         }
         $input = $request->all();
-        if ($request->ajax() && isset($input["statusExternalId"])) {
-            $input["status_id"] = Status::whereExternalId($input["statusExternalId"])->first()->id;
+        if ($request->ajax() && isset($input["statusId"])) {
+            $input["status_id"] = Status::whereId($input["statusId"])->first()->id;
         }
-        $project = $this->findByExternalId($external_id);
+        $project = $this->findByExternalId($id);
         $project->fill($input)->save();
 
         event(new \App\Events\ProjectAction($project, self::UPDATED_STATUS));
@@ -311,9 +310,9 @@ class ProjectsController extends Controller
      * @param $id
      * @return mixed
      */
-    public function findByExternalId($external_id)
+    public function findByExternalId($id)
     {
-        return Project::whereExternalId($external_id)->firstOrFail();
+        return Project::whereId($id)->firstOrFail();
     }
 
     public function logActivity()
@@ -321,4 +320,5 @@ class ProjectsController extends Controller
         $logs = \LogActivity::logActivityLists();
         return view('logActivity', compact('logs'));
     }
+
 }

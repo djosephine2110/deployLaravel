@@ -88,8 +88,8 @@ class TasksController extends Controller
                     $tasks->status->title . '</span>';
             })
             ->addColumn('view', function ($tasks) {
-                return '<a href="' . route("tasks.show", $tasks->external_id) . '" class="btn btn-link">' . __('View') . '</a>'
-                    . '<a data-toggle="modal" data-id="' . route('tasks.destroy', $tasks->external_id) . '" data-target="#deletion" class="btn btn-link">' . __('Delete') . '</a>';
+                return '<a href="' . route("tasks.show", $tasks->id) . '" class="btn btn-link">' . __('View') . '</a>'
+                    . '<a data-toggle="modal" data-id="' . route('tasks.destroy', $tasks->id) . '" data-target="#deletion" class="btn btn-link">' . __('Delete') . '</a>';
             })
             ->rawColumns(['titlelink', 'view', 'status_id'])
             ->make(true);
@@ -151,6 +151,7 @@ class TasksController extends Controller
             // dd($fileUpload->clientExtension());
             $timestamp = Carbon::now()->timestamp;
             $extension = $fileUpload->clientExtension();
+            $filename = $fileUpload->getClientOriginalName();
             $filePath = "promag/tasks/uploaded-$timestamp.$extension";
             $name =  "https://cdn.erakomp.co.id/$filePath";
             //dd($name);
@@ -173,11 +174,11 @@ class TasksController extends Controller
                 'getcolor' => $request->getcolor,
                 'image' => ($request->has('image')) ?  $name : NULL,
                 'flag' => Auth::user()->flag,
-
+                'filename' => ($request->has('filename')) ? $name : NULL,
             ]
         );
 
-        $insertedExternalId = $task->external_id;
+        $insertedExternalId = $task->id.'-'.str_slug($task->title, "-");
 
         Session()->flash('flash_message', __('Task successfully added'));
         event(new \App\Events\TaskAction($task, self::CREATED));
@@ -194,9 +195,8 @@ class TasksController extends Controller
 
     public function destroy(Task $task)
     {
-
         $task->delete();
-        $insertedExternalId = $task->project->external_id;
+        $insertedExternalId = $task->project->id.'-'.str_slug($task->title, "-").'-deleted';
         // dd($insertedExternalId);
         return redirect()->route("projects.show", $insertedExternalId);
     }
@@ -220,7 +220,7 @@ class TasksController extends Controller
             return redirect()->back();
         }
 
-        $folder = $task->external_id;
+        $folder = $task->external_id.'-'.str_slug($task->title, "-");
         $fileSystem = GetStorageProvider::getStorage();
         $fileData = $fileSystem->upload($folder, $filename, $file);
 
@@ -385,7 +385,36 @@ class TasksController extends Controller
         return redirect()->refresh();
     }
 
+    public function uploadFile(Request $request)
+    {
+        $fileUpload = $request->file('file');
+        $timestamp = Carbon::now()->timestamp;
+        $extension = $fileUpload->clientExtension();
+        $filename = $fileUpload->getClientOriginalName();
+        $name = "assets/files/uploaded-$filename";
+        
+        Storage::disk('oss')->put($name, file_get_contents($fileUpload));
 
+        if (Storage::disk('oss')->exists($name)) {
+            $fileUrl = "https://cdn.erakomp.co.id/$name";
+            User::Where('id',Auth::id())->update([
+                'image' => $fileUrl
+            ]);
+            return response()->json([
+                'url' => $fileUrl,
+            ]);
+            if($fileUrl == null){
+                $fileUrl = "no attachment";
+                return view('getFileUploaded', compact('fileUrl'));
+            }else{
+                return view('getFileUploaded', compact('fileUrl'));
+            }
+        }
+
+        return response()->json([
+            'error' => 'Failed to upload file',
+        ]);
+    }
 
     /**public function updateLabels(Request $request, $external_id)
     {
@@ -411,9 +440,9 @@ class TasksController extends Controller
      * @param $id
      * @return mixed
      */
-    public function findByExternalId($external_id)
+    public function findByExternalId($id)
     {
-        return Task::whereExternalId($external_id)->firstOrFail();
+        return Task::whereId($id)->firstOrFail();
     }
 
     /**

@@ -13,198 +13,72 @@ use DB;
 
 class ReportExport implements FromCollection, WithHeadings, WithMapping, WithEvents
 {
-    /**
-    * @return \Illuminate\Support\Collection
-    */
-    /**
-     * @return \Illuminate\Support\Collection
-     */
     public function collection()
     {
-        /**$getTaskReport =DB::table('activities')
-        ->join('tasks', 'activities.source_id', '=', 'tasks.id')
-        ->where('activities.source_type', '=', 'App\Models\Task')
-        ->join('projects', 'tasks.project_id', '=', 'projects.id')
-        ->join('users', 'tasks.user_created_id', '=', 'users.id')
-        ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('activities.text', 'activities.created_at', 'tasks.title AS t', 'users.name', 'projects.title AS p')
-        ->orderBy('tasks.title', 'DESC')
-        ->orderBy('activities.created_at', 'DESC')
-
-        ->get();
-
-        $getArray = [];
-        $count = 0;
-        foreach ($getTaskReport->groupBy('t') as $key=>$i) {
-            $min = Carbon::parse($i->pluck('created_at')->first());
-            $max = Carbon::parse($i->pluck('created_at')->last());
-            $diff = $min->diffInSeconds($max);
-            $hours = (floor($diff/3600) .'Hours' .floor(($diff%3600)/60). 'Mins' .floor(($diff%86400)/3600) . 'Secs');
-            //$getAve = avg($diff);
-            array_push($getArray, [
-
-                'task' => $key,
-                'hours' => $hours,
-
-
-
-            ]);
-        }**/
-        /**$startDate = request()->input('startDate') ;
-        $endDate   = request()->input('endDate') ;
-        $status = request()->input('status');
-        if ($status == 0 && $startDate == Carbon::today()->toDateString() && $endDate == Carbon::today()->toDateString()) {
-            $getTaskReport =DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users', 'tasks.user_created_id', '=', 'users.id')
+        $startDate = request()->input('from');
+        $endDate   = request()->input('to') ;
+        $status = request()->input('price_id');
+        $name = request()->input('name_id');
+        $divs = request()->input('divs_id');
+        $getTaskReport = DB::table('tasks')
             ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-        ->WhereBetween('tasks.created_at', [ ($startDate = Carbon::today()->toDateString()), ($endDate = Carbon::today()->addDays(1)) ])
-        ->orderBy('tasks.created_at', 'ASC')
-            ->get();
-        }
-**/
-        /**TRY
-
-        /**
-        if ($status == 0  && $endDate == Carbon::today()->toDateString()) {
-            $getTaskReport =DB::table('tasks')
+            ->where('tasks.deleted_at', '=', null)
             ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users', 'tasks.user_created_id', '=', 'users.id')
-            ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-        ->WhereBetween('tasks.created_at', [ $startDate, ($endDate = Carbon::today()->addDays(1)) ])
-        ->orderBy('tasks.created_at', 'ASC')
+            ->join('users', 'tasks.user_assigned_id', '=', 'users.id')
+            ->join('divs', 'tasks.flag', '=', 'divs.id')
+            ->select(
+                'statuses.title as taskStatus',
+                'projects.title as projectTitle',
+                'tasks.project_id',
+                'tasks.id',
+                'tasks.title as taskTitle',
+                'users.name as userName',
+                'tasks.status_id',
+                'tasks.updated_at as taskUpdated',
+                'tasks.created_at as taskCreated',
+                DB::raw('TIMESTAMPDIFF(HOUR, tasks.created_at, tasks.updated_at) AS duration')
+            )
+            ->where('projects.deleted_at', '=', null)
+            ->where(function ($query) use ($status) {
+                return $status ? $query->from('tasks')->where('tasks.status_id', $status) : '';
+            })
+            ->where(function ($query) use ($divs) {
+                return $divs ? $query->from('divs')->where('divs.id', $divs) : '';
+            })
+            ->where(function ($query) use ($name) {
+                return $name ? $query->from('users')->where('users.id', $name) : '';
+            })
+            ->where(function ($query) use ($startDate) {
+                return $startDate ? $query->from('tasks')
+                ->whereBetween('tasks.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']) : '';
+            })
             ->get();
-        }
-
-        if ($status == 0  && $startDate == Carbon::today()->toDateString()) {
-            $getTaskReport =DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users', 'tasks.user_created_id', '=', 'users.id')
-            ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-        ->WhereBetween('tasks.created_at', [ ($startDate = Carbon::today()->addDays(1)), $endDate ])
-        ->orderBy('tasks.created_at', 'ASC')
-            ->get();
-        }
-        if ($status != 0 && $startDate == Carbon::today()->toDateString() && $endDate == Carbon::today()->toDateString()) {
-            $getTaskReport =DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users', 'tasks.user_created_id', '=', 'users.id')
-            ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-        ->WhereBetween('tasks.created_at', [ ($startDate = Carbon::today()->toDateString()), ($endDate = Carbon::today()->addDays(1)) ])
-        ->Where('tasks.status_id', '=', $status)
-        ->orderBy('tasks.created_at', 'ASC')
-            ->get();
-        }
-        if ($status == 0) {
-            $getTaskReport =DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users', 'tasks.user_created_id', '=', 'users.id')
-            ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-        ->WhereBetween('tasks.created_at', [ $startDate, $endDate ])
-        ->orderBy('tasks.created_at', 'ASC')
-            ->get();
-        } else {
-            $getTaskReport =DB::table('tasks')
-        ->join('projects', 'tasks.project_id', '=', 'projects.id')
-        ->join('users', 'tasks.user_created_id', '=', 'users.id')
-        ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-    ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-    ->Where('tasks.status_id', '=', $status)
-
-    ->WhereBetween('tasks.created_at', [ $startDate, $endDate ])
-
-    ->orderBy('tasks.created_at', 'ASC')
-        ->get();
-        }**/
-
-        $startDate = request()->input('startDate') ;
-        $endDate   = request()->input('endDate') ;
-        $status = request()->input('status');
-        if ($status == 0 && $startDate == Carbon::today()->toDateString() && $endDate == Carbon::today()->toDateString()) {
-            $getTaskReport =DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users', 'tasks.user_created_id', '=', 'users.id')
-            ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-        ->WhereBetween('tasks.created_at', [ ($startDate = Carbon::today()->toDateString()) . ' 00:00:00', ($endDate = Carbon::today()->toDateString()).' 23:59:59' ])
-        ->orderBy('tasks.created_at', 'ASC')
-            ->get();
-        }
-        if ($status != 0 && $startDate == Carbon::today()->toDateString() && $endDate == Carbon::today()->toDateString()) {
-            $getTaskReport =DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users', 'tasks.user_created_id', '=', 'users.id')
-            ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-        ->WhereBetween('tasks.created_at', [ ($startDate = Carbon::today()->toDateString()). ' 00:00:00', ($endDate = Carbon::today()->toDateString()).' 23:59:59' ])
-        ->Where('tasks.status_id', '=', $status)
-        ->orderBy('tasks.created_at', 'ASC')
-            ->get();
-        }
-        if ($status != 0) {
-            $getTaskReport =DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users', 'tasks.user_created_id', '=', 'users.id')
-            ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-        ->WhereBetween('tasks.created_at', [ $startDate .'00:00:00', $endDate .' 23:59:59' ])
-        ->Where('tasks.status_id', '=', $status)
-        ->orderBy('tasks.created_at', 'ASC')
-            ->get();
-        } else {
-            // return 'else';
-            //     $getTaskReport =DB::table('tasks')
-            //     ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            //     ->join('users', 'tasks.user_created_id', '=', 'users.id')
-            //     ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-            // ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-            // ->WhereBetween('tasks.created_at', [ ($startDate = Carbon::today()->toDateString()), ($endDate = Carbon::today()) . '23:59:59' ])
-            // ->orderBy('tasks.created_at', 'ASC')
-            //     ->get();
-            $getTaskReport = DB::table('tasks')
-            ->join('projects', 'tasks.project_id', '=', 'projects.id')
-            ->join('users', 'tasks.user_created_id', '=', 'users.id')
-            ->join('statuses', 'tasks.status_id', '=', 'statuses.id')
-        ->select('tasks.created_at as tc', 'tasks.updated_at as ua', 'tasks.title AS t', 'users.name', 'projects.title AS p', DB::raw('TIMESTAMPDIFF(MINUTE, tasks.created_at, tasks.updated_at) as duration'), 'statuses.title as st')
-            ->whereBetween('tasks.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
-            ->orderBy('tasks.created_at', 'ASC')
-            ->get();
-        }
-        
         return collect($getTaskReport);
     }
 
     public function headings(): array
     {
         return [
-            'Task Title',
+            'Status',
+            'Title',
             'Project Title',
-            'Created By',
-            'Created At',
-            'Lastest Move',
-            'Durations(In Minutes)',
-            'Current Card Status'
-               
+            'Assigned To',
+            'Created Date',
+            'Updated Date',
+            'Duration',
         ];
     }
 
     public function map($transaction): array
     {
         return [
-            $transaction->t,
-            $transaction->p,
-            $transaction->name,
-            $transaction->tc,
-            $transaction->ua,
-            $transaction->duration,
-            $transaction->st,
-            
-            
+            $transaction->taskStatus,
+            $transaction->taskTitle,
+            $transaction->projectTitle,
+            $transaction->userName,
+            date('l, d/m/y H:i:s', strtotime( $transaction->taskCreated )),
+            date('l, d/m/y H:i:s', strtotime( $transaction->taskUpdated )),
+            (Carbon::parse($transaction->taskCreated)) -> diff((Carbon::parse($transaction->taskUpdated))) -> format('%D : %H : %I : %S'),
         ];
     }
     public function registerEvents(): array

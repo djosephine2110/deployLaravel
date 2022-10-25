@@ -6,7 +6,7 @@
         <div class="container" style="padding: 5%;">
             <div class="row" style="margin-bottom: 20px;">
                 <div class="col-lg-12 margin-tb">
-                    <a href="/tasks/{{$comment->task->external_id}}"><div class="btn btn-md btn-brand movedown">Back</div></a>
+                    <a href="/tasks/{{$comment->task->id.'-'.str_slug($comment->task->title, "-")}}"><div class="btn btn-md btn-brand movedown">Back</div></a>
                     <div class="">
                         <h1 style="text-transform: uppercase; font-weight:bold; text-align:center">Edit Comment</h1>
                     </div>

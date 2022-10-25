@@ -28,11 +28,11 @@
             </div>
          </form>
          @if (count($hasil))
-         <div class="card-panel green white-text" style="text-align:center; font-weight:bold;">Hasil pencarian : <b>{{$query}}</b></div>
+         <div class="card-panel green white-text" style="text-align:center; font-weight:bold;">Hasil pencarian : {{$query}}</div>
              @foreach($hasil as $data)
              <div class="row">
                  <div class="col s12">
-                     <h5 style="text-align:center; color:black;"><a href="/tasks/{{$data->external_id}}"  style="text-align:center; color:black;">{{ $data->title }}</a></h5>
+                     <h5 style="text-align:center; color:black;"><a href="/tasks/{{$data->id}}"  style="text-align:center; color:black;">{{ $data->title }}</a></h5>
          
                      <div class="divider"></div>
                         
@@ -45,7 +45,7 @@
          
          </div>
          
-         {{ $hasil->render() }}
+         {{ $hasil->appends(['q' => $query])->render() }}
              
          @else
             <div class="card-panel red darken-3 white-text">Oops.. Data <b>{{$query}}</b> Tidak Ditemukan</div>

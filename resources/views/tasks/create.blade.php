@@ -225,6 +225,7 @@
     </style>
 @endpush
 @push('scripts')
+<script type="text/javascript" src="{{ asset('assets/js/summernote-file.js') }}"></script>
     <script>
         Dropzone.autoDiscover = false;
         $(document).ready(function () {

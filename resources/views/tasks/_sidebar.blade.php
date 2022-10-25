@@ -1,32 +1,30 @@
 <div class="row">
     <div class="col-md-4" style="font-size:14px!important;">{{ __('Assigned') }}</div>
     <div class="col-md-8">
-                <span id="assignee-user" class="siderbar-list-value" style="font-size:14px!important;">{{$tasks->user->name}}
-                    @if(Entrust::can('can-assign-new-user-to-task'))
-                        <i class="icon ion-md-create"></i>
-                    @endif
-                </span>
+        <span id="assignee-user" class="siderbar-list-value" style="font-size:14px!important;">{{$tasks->user->name}}
+            @if(Entrust::can('can-assign-new-user-to-task'))
+            <i class="icon ion-md-create"></i>
+            @endif
+        </span>
 
         @if(Entrust::can('can-assign-new-user-to-task'))
-            @if(!$tasks->isClosed())
-                <span id="assignee-picker" class="hidden">
-                    <form method="POST" action="{{url('tasks/updateassign', $tasks->external_id)}}">
-                        {{csrf_field()}}
-                        <select name="user_assigned_id"
-                                class="small-form-control bootstrap-select assignee-selectpicker dropdown-user-selecter pull-right"
-                                id="user-search-select" data-live-search="true"
-                                data-style="btn btn-sm dropdown-toggle btn-light"
-                                data-container="body"
-                                onchange="this.form.submit()">
-                            @foreach($users as $key => $user)
-                                <option data-tokens="{{$user}}"
-                                        {{$tasks->user_assigned_id == $key ? 'selected' : ''}} value="{{$key}}">{{$user}}
-                                </option>
-                            @endforeach
-                        </select>
-                    </form>
-                </span>
-            @endif
+        @if(!$tasks->isClosed())
+        <span id="assignee-picker" class="hidden">
+            <form method="POST" action="{{url('tasks/updateassign', $tasks->external_id)}}">
+                {{csrf_field()}}
+                <select name="user_assigned_id"
+                    class="small-form-control bootstrap-select assignee-selectpicker dropdown-user-selecter pull-right"
+                    id="user-search-select" data-live-search="true" data-style="btn btn-sm dropdown-toggle btn-light"
+                    data-container="body" onchange="this.form.submit()">
+                    @foreach($users as $key => $user)
+                    <option data-tokens="{{$user}}" {{$tasks->user_assigned_id == $key ? 'selected' : ''}}
+                        value="{{$key}}">{{$user}}
+                    </option>
+                    @endforeach
+                </select>
+            </form>
+        </span>
+        @endif
         @endif
 
     </div>
@@ -40,16 +38,16 @@
 <div class="row margin-top-10">
     <div class="col-md-4">{{ __('Deadline') }}</div>
     <div class="col-md-8">
-                    <span {{Entrust::can('task-update-deadline') ? 'data-toggle=modal data-target=#ModalUpdateDeadline' : ''}}  class="siderbar-list-value {{$tasks->isCloseToDeadline() ? 'text-danger' : ''}}">{{date('l, d-m-y H:i:s', strtotime($tasks->deadline))}}
-                        @if($tasks->status_id != 7)
-                            <span class="small text-black">({!! $tasks->days_until_deadline !!})</span>
-                            @else
-                            <span></span>
-                        @endif
-                        @if(Entrust::can('task-update-deadline'))
-                            <i class="icon ion-md-create"></i>
-                        @endif
-                    </span>
+        <span {{Entrust::can('task-update-deadline') ? 'data-toggle=modal data-target=#ModalUpdateDeadline' : '' }}
+            class="siderbar-list-value {{$tasks->isCloseToDeadline() ? 'text-danger' : ''}}">{{date('l, d-m-y H:i:s',
+            strtotime($tasks->deadline))}}
+            @if($tasks->status_id != 7)
+            <span class="small text-black">({!! $tasks->days_until_deadline !!})</span>
+            @endif
+            @if(Entrust::can('task-update-deadline'))
+            <i class="icon ion-md-create"></i>
+            @endif
+        </span>
 
 
     </div>
@@ -60,38 +58,34 @@
 <div class="row margin-top-10">
     <div class="col-md-4">{{ __('Status') }}</div>
     <div class="col-md-8">
-                    <span id="status-text" class="siderbar-list-value">
-                    {{ $tasks->status->title }}
-                        @if(Entrust::can('task-update-status'))
-                            <i class="icon ion-md-create"></i>
-                        @endif
-                    </span>
-        @if(Entrust::can('task-update-status'))
-            @if(!$tasks->isClosed())
-                <span id="status-picker" class="hidden">
-                    <form method="POST" action="{{url('tasks/updatestatus', $tasks->external_id)}}">
-                        {{csrf_field()}}
-                        <select name="status_id"
-                                class="small-form-control bootstrap-select status-selectpicker dropdown-user-selecter"
-                                id="status-search-select"
-                                data-style="btn btn-sm dropdown-toggle btn-light"
-                                data-container="body"
-                                onchange="this.form.submit()">
-                                @if(Entrust::hasRole('owner'))
-                            @foreach($statuses as $key => $status)
-                                <option
-                                        {{$tasks->status->id == $key ? 'selected' : ''}} value="{{$key}}">{{$status}}</option>
-                            @endforeach
-                            @else
-                            @foreach($statuses->except('id',7)->except('id', 6) as $key => $status)
-                            <option
-                                    {{$tasks->status->id == $key ? 'selected' : ''}} value="{{$key}}">{{$status}}</option>
-                        @endforeach
-                        @endif
-                        </select>
-                    </form>
-                </span>
+        <span id="status-text" class="siderbar-list-value">
+            {{ $tasks->status->title }}
+            @if(Entrust::can('task-update-status'))
+            <i class="icon ion-md-create"></i>
             @endif
+        </span>
+        @if(Entrust::can('task-update-status'))
+        @if(!$tasks->isClosed())
+        <span id="status-picker" class="hidden">
+            <form method="POST" action="{{url('tasks/updatestatus', $tasks->id)}}">
+                {{csrf_field()}}
+                <select name="status_id"
+                    class="small-form-control bootstrap-select status-selectpicker dropdown-user-selecter"
+                    id="status-search-select" data-style="btn btn-sm dropdown-toggle btn-light" data-container="body"
+                    onchange="this.form.submit()">
+                    @if(Entrust::hasRole('owner'))
+                    @foreach($statuses as $key => $status)
+                    <option {{$tasks->status->id == $key ? 'selected' : ''}} value="{{$key}}">{{$status}}</option>
+                    @endforeach
+                    @else
+                    @foreach($statuses->except('id',7)->except('id', 6) as $key => $status)
+                    <option {{$tasks->status->id == $key ? 'selected' : ''}} value="{{$key}}">{{$status}}</option>
+                    @endforeach
+                    @endif
+                </select>
+            </form>
+        </span>
+        @endif
         @endif
     </div>
 </div>
@@ -99,74 +93,71 @@
 <div class="row margin-top-10">
     <div class="col-md-4">{{ __('Project') }}</div>
     <div class="col-md-8">
-                    <span id="project-text" class="siderbar-list-value">
-                    {{ !is_null($tasks->project) ? $tasks->project->title : __('None')  }}
-                        @if(Entrust::can('task-update-status'))
-                            <i class="icon ion-md-create"></i>
-                        @endif
-                    </span>
+        <span id="project-text" class="siderbar-list-value">
+            {{ !is_null($tasks->project) ? $tasks->project->title : __('None') }}
+            @if(Entrust::can('task-update-status'))
+            <i class="icon ion-md-create"></i>
+            @endif
+        </span>
         @if(Entrust::can('task-update-linked-project'))
-                <span id="project-picker" class="hidden">
-                    <form method="POST" action="{{route('tasks.update.project', $tasks->external_id)}}">
-                        {{csrf_field()}}
-                        <select name="project_external_id"
-                                class="small-form-control bootstrap-select project-selectpicker dropdown-user-selecter pull-right"
-                                id="project-search-select"
-                                data-style="btn btn-sm dropdown-toggle btn-light"
-                                data-container="body"
-                                onchange="this.form.submit()">
-                                <option value=""></option>
-                            @foreach($projects as $key => $project)
-                                <option
-                                        {{optional($tasks->project)->external_id == $key ? 'selected' : ''}} value="{{$key}}">{{$project}}</option>
-                            @endforeach
-                        </select>
-                    </form>
-                </span>
+        <span id="project-picker" class="hidden">
+            <form method="POST" action="{{route('tasks.update.project', $tasks->id)}}">
+                {{csrf_field()}}
+                <select name="project_external_id"
+                    class="small-form-control bootstrap-select project-selectpicker dropdown-user-selecter pull-right"
+                    id="project-search-select" data-style="btn btn-sm dropdown-toggle btn-light" data-container="body"
+                    onchange="this.form.submit()">
+                    <option value=""></option>
+                    @foreach($projects as $key => $project)
+                    <option {{optional($tasks->project)->external_id == $key ? 'selected' : ''}}
+                        value="{{$key}}">{{$project}}</option>
+                    @endforeach
+                </select>
+            </form>
+        </span>
         @endif
     </div>
 </div>
-<div class="row margin-top-10" >
+<div class="row margin-top-10">
     <div class="col-md-4">Label</div>
     <div class="col-md-8">
         @if(($tasks->getlabel == " " || $tasks->getlabel == NULL ))
-        <span>no label added</span>     <a href="{{ route('taskss.edit',$tasks->id) }}"><i class="fas fa-edit"></i></a>
-
-
+        <span>no label added</span> <a href="{{ route('taskss.edit',$tasks->id) }}"><i class="fas fa-edit"></i></a>
         @else
-        <button class="btn" style="background-color: {{$tasks->getcolor}}; color:white; border-radius:50px; width:120px; font-weight:800; height:20px; padding:1px; margin-right:5px;pointer-events:none; ">{{$tasks->getlabel}}</button>  <a href="{{ route('taskss.edit',$tasks->id) }}"><i class="fas fa-edit"></i></a>
+        <button class="btn"
+            style="background-color: {{$tasks->getcolor}}; color:white; border-radius:50px; width:120px; font-weight:800; height:20px; padding:1px; margin-right:5px;pointer-events:none; ">{{$tasks->getlabel}}</button>
+        <a href="{{ route('taskss.edit',$tasks->id) }}"><i class="fas fa-edit"></i></a>
         @endif
-        <form action="{{ route('tasks.destroy',$tasks->external_id) }}" method="POST" style="display:flex; margin-top:5%; ">
-                                        @csrf
-                                            @method('DELETE')
-                              
-                                            <button type="submit" class="btn btn-danger" >Delete Task
-                                            </button>
-                                        </form>
+        <form action="{{ route('tasks.destroy',$tasks->id).'-'.str_slug($tasks->title, " -") }}" method="POST"
+            style="display:flex; margin-top:5%; ">
+            @csrf
+            @method('DELETE')
+
+            <button type="submit" class="btn btn-danger">Delete Task
+            </button>
+        </form>
         @if(Entrust::can('task-update-linked-project'))
-                <span id="project-picker" class="hidden">
-                    <form method="POST" action="{{route('tasks.update.project', $tasks->external_id)}}">
-                        {{csrf_field()}}
-                        <select name="project_external_id"
-                                class="small-form-control bootstrap-select project-selectpicker dropdown-user-selecter pull-right"
-                                id="project-search-select"
-                                data-style="btn btn-sm dropdown-toggle btn-light"
-                                data-container="body"
-                                onchange="this.form.submit()">
-                                <option value=""></option>
-                            @foreach($label as $key )
-                               <option value="{{$key->price}}">{{$key->name}}</option>
-                            @endforeach
-                        </select>
-                    </form>
-                </span>
+        <span id="project-picker" class="hidden">
+            <form method="POST" action="{{route('tasks.update.project', $tasks->id)}}">
+                {{csrf_field()}}
+                <select name="project_external_id"
+                    class="small-form-control bootstrap-select project-selectpicker dropdown-user-selecter pull-right"
+                    id="project-search-select" data-style="btn btn-sm dropdown-toggle btn-light" data-container="body"
+                    onchange="this.form.submit()">
+                    <option value=""></option>
+                    @foreach($label as $key )
+                    <option value="{{$key->price}}">{{$key->name}}</option>
+                    @endforeach
+                </select>
+            </form>
+        </span>
         @endif
     </div>
 </div>
 
 @push('scripts')
-    <script>
-        $(document).ready(function () {
+<script>
+    $(document).ready(function () {
             $('select').selectpicker();
 
             $('#assignee-user').on('click',function(){
@@ -257,5 +248,5 @@
     var datetimeField = document.getElementById("cal");
     datetimeField.value = localDatetime;
 });
-    </script>
+</script>
 @endpush

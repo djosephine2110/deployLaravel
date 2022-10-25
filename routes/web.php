@@ -76,9 +76,9 @@ Route::group(['middleware' => ['auth']], function () {
 
     Route::get('/menuss','NewmenuController@index')->name('filteringg');
     Route::get('/menusssup','NewmenusupController@index')->name('filteringgsup');
-Route::get('get-states', 'DropdownController@getStates')->name('getStates');
-Route::get('/digitalrep', 'DigitalrepController@test')->name('filterrep');
-Route::get('/digitalrepsup', 'DigitalrepsupController@test')->name('filterrepsup');
+    Route::get('get-states', 'DropdownController@getStates')->name('getStates');
+    Route::get('/digitalrepem', 'DigitalrepemController@test')->name('filterrepem');
+    Route::get('/filterdigitalprint', 'DigitalrepemController@filter')->name('filterdigitalprint');
 
     Route::get('/test', 'OverController@test')->name('filter');
     Route::get('/overdue', 'OverController@overdue')->name('filtering');
@@ -116,7 +116,7 @@ Route::get('/digitalrepsup', 'DigitalrepsupController@test')->name('filterrepsup
 
 
     Route::resource('userr','UserrController');
-        Route::resource('taskss', 'TaskssController');
+    Route::resource('taskss', 'TaskssController');
         ## View
     Route::get('/subjects', 'SubjectsController@index')->name('subjects');
     ## Create
@@ -136,7 +136,7 @@ Route::get('/digitalrepsup', 'DigitalrepsupController@test')->name('filterrepsup
 
     Route::get('/getcomm', 'CommentlogController@getComment');
     Route::get('/', 'PagesController@dashboard');
-    Route::get('dashboard', 'PagesController@dashboard')->name('dashboard');
+    Route::get('dashboards', 'PagesController@dashboard')->name('dashboards');
     Route::get('report', 'ExcelController@importExportView')->name('report');
     Route::get('exportExcel/{type}', 'ExcelController@exportExcel')->name('exportExcel');
     Route::get('exportExcelcalc/{type}', 'ExcelController@exportExcel2')->name('exportExcel2');
@@ -249,6 +249,9 @@ Route::get('/digitalrepsup', 'DigitalrepsupController@test')->name('filterrepsup
      */
     Route::group(['prefix' => 'projects'], function () {
         Route::get('/data', 'ProjectsController@indexData')->name('projects.index.data');
+        // Route::get('show/{title}')
+        
+        // Route::get('/data', 'ProjectsController@indexData')->name('projects.index.data');
         
         Route::patch('/updatestatus/{external_id}', 'ProjectsController@updateStatus')->name('project.update.status');
         Route::patch('/updateassign/{external_id}', 'ProjectsController@updateAssign')->name('project.update.assignee');
